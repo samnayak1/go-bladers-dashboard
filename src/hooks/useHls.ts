@@ -1,28 +1,83 @@
-import { useEffect, useRef } from "react";
+import { useState, useCallback } from "react";
 import Hls from "hls.js";
 
-export const useHls = (url: string | null) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
+interface UseStreamPlayerOptions {
+  onError?: (error: any) => void;
+  onLoad?: () => void;
+}
 
-  useEffect(() => {
-    if (!url || !videoRef.current) return;
+export const useStreamPlayer = (options?: UseStreamPlayerOptions) => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [hlsInstance, setHlsInstance] = useState<Hls | null>(null);
 
-    const video = videoRef.current;
+  const initializeHls = useCallback((
+    video: HTMLVideoElement,
+    src: string
+  ) => {
+    setIsLoading(true);
+    setError(null);
 
     if (Hls.isSupported()) {
-      const hls = new Hls();
-      hls.loadSource(url);
-      hls.attachMedia(video);
-
-      hls.on(Hls.Events.ERROR, (_, data) => {
-        if (data.fatal) console.error("HLS fatal error:", data);
+      const hls = new Hls({
+        debug: false,
+        enableWorker: true,
+        lowLatencyMode: true,
       });
 
-      return () => hls.destroy();
-    } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-      video.src = url;
-    }
-  }, [url]);
+      hls.loadSource(src);
+      hls.attachMedia(video);
 
-  return videoRef;
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        setIsLoading(false);
+        options?.onLoad?.();
+      });
+
+      hls.on(Hls.Events.ERROR, (_, data) => {
+        const errorMsg = `HLS Error: ${data.type} - ${data.details}`;
+        setError(errorMsg);
+        options?.onError?.(data);
+        setIsLoading(false);
+      });
+
+      setHlsInstance(hls);
+      return hls;
+    } 
+    // Safari native HLS
+    else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+      video.src = src;
+      
+      const handleLoadedMetadata = () => {
+        setIsLoading(false);
+        options?.onLoad?.();
+      };
+
+      video.addEventListener("loadedmetadata", handleLoadedMetadata);
+      
+      // Cleanup function for Safari
+      return () => {
+        video.removeEventListener("loadedmetadata", handleLoadedMetadata);
+      };
+    }
+    else {
+      setError("HLS is not supported in this browser");
+      setIsLoading(false);
+      return null;
+    }
+  }, [options]);
+
+  const destroyHls = useCallback(() => {
+    if (hlsInstance) {
+      hlsInstance.destroy();
+      setHlsInstance(null);
+    }
+  }, [hlsInstance]);
+
+  return {
+    isLoading,
+    error,
+    initializeHls,
+    destroyHls,
+    hlsInstance,
+  };
 };

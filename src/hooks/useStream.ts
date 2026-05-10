@@ -4,14 +4,15 @@ import {
   getLatestStreamsService,
   getStreamsOfUserService,
   regenerateStreamKeyService,
-  type StreamResponseDto,
 } from "../api/stream.api";
 
 import {
   getLatestCreatorsService,
-  type IUser,
+
   type LatestCreatorsResponse,
 } from "../api/user.api";
+import type { StreamResponseDto } from "../types/stream.type";
+import type { IUser } from "../types/user.type";
 
 interface StreamStoreState {
 

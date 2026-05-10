@@ -35,7 +35,7 @@ export interface SessionUserResponse{
 }
 
 
-export const getSessionUserService=async ()=>{
+export const getSessionUserService=async ():Promise<SessionUserResponse>=>{
 
   const response = await axiosClient.get<SessionUserResponse>('/auth/me');
   return response.data;
@@ -50,14 +50,14 @@ export const getUserDetailsService=async(username:string)=>{
 
 
 
-export const loginUserService=async ({email,password}:LoginRequest)=>{
+export const loginUserService=async ({email,password}:LoginRequest):Promise<LoginResponse>=>{
     
      const response = await axiosClient.post<LoginResponse>('/auth/login', {email,password});
       return response.data;
      
 }
 
-export const refreshTokenService=async ({token,userId}:RefreshTokenRequest)=>{
+export const refreshTokenService=async ({token,userId}:RefreshTokenRequest):Promise<RefreshTokenResponse>=>{
     const response= await axiosClient.post<RefreshTokenResponse>('/auth/refresh',{token,userId});
     return response.data;
 }
