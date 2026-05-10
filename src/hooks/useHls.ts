@@ -34,26 +34,42 @@ export const useStreamPlayer = (options?: UseStreamPlayerOptions) => {
       });
 
       hls.on(Hls.Events.ERROR, (_, data) => {
-        const errorMsg = `HLS Error: ${data.type} - ${data.details}`;
-        setError(errorMsg);
-        options?.onError?.(data);
-        setIsLoading(false);
+        if (data.fatal) {
+
+
+          const errorMsg = `HLS Error: ${data.type} - ${data.details}`;
+          setError(errorMsg);
+          options?.onError?.(data);
+          setIsLoading(false);
+
+          switch (data.type) {
+            case Hls.ErrorTypes.NETWORK_ERROR:
+              hls.startLoad(); // try to recover
+              break;
+            case Hls.ErrorTypes.MEDIA_ERROR:
+              hls.recoverMediaError(); // try to recover
+              break;
+            default:
+              hls.destroy(); // unrecoverable
+              break;
+          }
+        }
       });
 
       setHlsInstance(hls);
       return hls;
-    } 
+    }
     // Safari native HLS
     else if (video.canPlayType("application/vnd.apple.mpegurl")) {
       video.src = src;
-      
+
       const handleLoadedMetadata = () => {
         setIsLoading(false);
         options?.onLoad?.();
       };
 
       video.addEventListener("loadedmetadata", handleLoadedMetadata);
-      
+
       // Cleanup function for Safari
       return () => {
         video.removeEventListener("loadedmetadata", handleLoadedMetadata);
