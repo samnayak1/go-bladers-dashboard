@@ -1,0 +1,6 @@
+@import "tailwindcss";
+
+
+.ant-btn-primary {
+  color: white !important;
+}
