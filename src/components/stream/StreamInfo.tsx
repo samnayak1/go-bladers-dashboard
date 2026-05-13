@@ -1,7 +1,7 @@
 import { Card, Typography, Space, Tag, Button } from "antd";
 import { 
   UserOutlined, 
-  ClockCircleOutlined, 
+
   FullscreenOutlined,
   ReloadOutlined 
 } from "@ant-design/icons";
@@ -52,12 +52,7 @@ const StreamInfo: React.FC<StreamInfoProps> = ({
             <UserOutlined style={{ color: "#a1a1aa" }} />
             <Text style={{ color: "#a1a1aa" }}>@{username}</Text>
             
-            {viewerCount !== undefined && isLive && (
-              <>
-                <ClockCircleOutlined style={{ color: "#a1a1aa" }} />
-                <Text style={{ color: "#a1a1aa" }}>{viewerCount} viewers</Text>
-              </>
-            )}
+       
           </Space>
         </Space>
 
